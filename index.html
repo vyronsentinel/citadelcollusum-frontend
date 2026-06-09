@@ -549,6 +549,8 @@ async function renderSettings(){
     const r=await api('/api/company'); company=r.company; membership=r.membership; const c=company||{}; const u=r.usage||{};
     let sched=null; try{ sched=await api('/api/company/schedule'); }catch{}
     sched=sched||{cadence:'SEMIMONTHLY',day_of_month:'',auto_email:true,enabled:false};
+    let mail=null; try{ mail=await api('/api/company/email'); }catch(e){}
+    mail=mail||{configured:false,host:'',port:465,user:'',from:'',secure:null,hasPassword:false};
     $('view').innerHTML=`
       <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;align-items:start">
         <div class="card">
@@ -585,6 +587,21 @@ async function renderSettings(){
           <button class="btn sm" onclick="saveEmailTpl()">Save template</button>
         </div>
         <div class="card">
+          <div class="section-title">Email sending (SMTP)</div>
+          <div class="muted" style="margin-bottom:8px">Payslips are emailed from your own company mailbox. ${mail.configured?'<span class="chip ok">Configured</span>':'<span class="chip warn">Not set up</span>'}</div>
+          <label>SMTP host</label><input id="m_host" value="${esc(mail.host||'')}" placeholder="mail.yourcompany.com"/>
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
+            <div><label>Port</label><input id="m_port" type="number" value="${esc(mail.port||465)}" placeholder="465"/></div>
+            <div><label>Security</label><select id="m_secure"><option value="ssl" ${mail.secure!==false?'selected':''}>SSL (port 465)</option><option value="tls" ${mail.secure===false?'selected':''}>STARTTLS (port 587)</option></select></div>
+          </div>
+          <label>Username (full email address)</label><input id="m_user" value="${esc(mail.user||'')}" placeholder="payroll@yourcompany.com"/>
+          <label>Password ${mail.hasPassword?'<span class="muted">(leave blank to keep current)</span>':''}</label><input id="m_pass" type="password" placeholder="${mail.hasPassword?'saved':'Mailbox password'}"/>
+          <label>From address</label><input id="m_from" value="${esc(mail.from||'')}" placeholder="Payroll <payroll@yourcompany.com>"/>
+          <div style="height:14px"></div>
+          <div class="row"><button class="btn sm" onclick="saveEmailSmtp()">Save email settings</button><button class="btn ghost sm" onclick="testEmailSmtp()">Send test email</button></div>
+          <div class="muted" style="margin-top:10px">Find these under your email provider's connect-a-device or IMAP/SMTP settings.</div>
+        </div>
+        <div class="card">
           <div class="section-title">Automatic payroll schedule</div>
           <label class="toggle"><input type="checkbox" id="s_enabled" ${sched.enabled?'checked':''} style="width:auto"/> Enable scheduled runs</label>
           <label>Cadence</label>
@@ -597,6 +614,7 @@ async function renderSettings(){
         </div>
       </div>`;
     $('c_logo').addEventListener('change',uploadLogo);
+    const ms=$('m_secure'); if(ms) ms.onchange=()=>{ $('m_port').value = ms.value==='ssl'?465:587; };
   }catch(e){errBox(e);}
 }
 async function saveCompany(){
@@ -609,6 +627,18 @@ async function saveEmailTpl(){
 async function saveSchedule(){
   const body={enabled:$('s_enabled').checked,cadence:$('s_cadence').value,day_of_month:$('s_dom').value?Number($('s_dom').value):null,auto_email:$('s_autoemail').checked};
   try{ await api('/api/company/schedule',{method:'PUT',body:JSON.stringify(body)}); toast('Schedule saved'); }catch(e){toast(e.message);}
+}
+async function saveEmailSmtp(){
+  const secure=$('m_secure').value==='ssl';
+  const body={host:($('m_host').value||'').trim(),port:Number($('m_port').value||(secure?465:587)),user:($('m_user').value||'').trim(),from:($('m_from').value||'').trim(),secure:secure};
+  const pw=$('m_pass').value; if(pw) body.password=pw;
+  if(!body.host||!body.user){ toast('Enter at least SMTP host and username'); return; }
+  try{ await api('/api/company/email',{method:'PUT',body:JSON.stringify(body)}); toast('Email settings saved'); }catch(e){ toast(e.message); }
+}
+async function testEmailSmtp(){
+  const to=prompt('Send a test email to which address?', (me&&me.email)||'');
+  if(!to) return;
+  try{ await api('/api/company/email/test',{method:'POST',body:JSON.stringify({to:to})}); toast('Test email sent \u2014 check that inbox'); }catch(e){ toast('Test failed: '+e.message); }
 }
 function uploadLogo(ev){
   const file=ev.target.files[0]; if(!file) return;
