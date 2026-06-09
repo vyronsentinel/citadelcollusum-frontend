@@ -41,8 +41,9 @@
   .login-card h1{font-size:22px;margin:0 0 2px;font-family:var(--serif)}
   .muted{color:var(--sub);font-size:13px}
   label{display:block;font-weight:600;font-size:12.5px;margin:15px 0 5px;color:#3a4150}
-  input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;color:var(--ink)}
-  input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px #27406e22}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;color:var(--ink);font-family:inherit}
+  textarea{min-height:92px;resize:vertical;line-height:1.5}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px #27406e22}
   .btn{background:var(--primary);color:#fff;border:none;border-radius:9px;padding:11px 16px;font-weight:600;font-size:14px;width:100%;transition:background .15s}
   .btn:hover{background:var(--primary-h)}
   .btn:disabled{opacity:.7;cursor:default}
@@ -115,6 +116,16 @@
   .kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
   .kv span:first-child{color:var(--sub)}
   #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--navy3);color:#fff;padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:500;opacity:0;transition:.25s;z-index:100;pointer-events:none;box-shadow:var(--shadow-l)}
+  .banner{background:linear-gradient(90deg,#fbf1dd,#fff7e8);border:1px solid #efd9a8;color:#7a5a12;padding:10px 16px;border-radius:11px;margin:18px 28px 0;font-size:13px}
+  .banner b{color:#5a4310}
+  .lockcard{max-width:520px;margin:64px auto;text-align:center}
+  .lockcard .ic{width:62px;height:62px;border-radius:16px;background:var(--badbg);color:var(--bad);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+  .switchrow{margin-top:18px;text-align:center;font-size:13px;color:var(--sub)}
+  .switchrow a{font-weight:600;cursor:pointer;color:var(--primary)}
+  .uprow{display:flex;align-items:center;gap:14px;margin-top:8px}
+  .logoprev{width:54px;height:54px;border-radius:11px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+  .toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;margin-top:4px}
+  code{background:#eef0f4;padding:1px 5px;border-radius:5px;font-size:12px}
   @media(max-width:860px){.login-wrap{grid-template-columns:1fr}.brandside{display:none}}
   @media(max-width:760px){.side{position:static;width:100%;height:auto}.main{margin-left:0}.side .foot{display:none}.nav{flex-direction:row;overflow-x:auto}}
 </style>
@@ -135,7 +146,7 @@
     <svg class="skyline" viewBox="0 0 440 90" preserveAspectRatio="none"><path d="M0 90 V52 h16 v-7 h7 v7 h14 v-7 h7 v7 h22 v-18 h7 v-7 h7 v7 h7 v18 h22 v-7 h7 v7 h16 v-26 h7 v-8 h7 v8 h7 v26 h16 v-7 h7 v7 h22 v-18 h7 v-7 h7 v7 h7 v18 h22 v-7 h7 v7 h16 v-12 h7 v-6 h7 v6 h7 v12 h22 v-7 h7 v7 h20 V90 Z" fill="#ffffff0e"/></svg>
   </div>
   <div class="formside">
-    <div class="login-card">
+    <div class="login-card" id="signinCard">
       <h1>Sign in</h1>
       <div class="muted">Welcome back. Access your payroll workspace.</div>
       <label>Email</label>
@@ -146,12 +157,33 @@
       <div style="height:16px"></div>
       <button class="btn" id="loginBtn" onclick="doLogin()">Sign in</button>
       <div id="loginMsg"></div>
+      <div class="switchrow">New to Citadel Collusum? <a onclick="showSignup()">Create a company account</a></div>
       <details style="margin-top:18px">
         <summary class="muted" style="cursor:pointer">Advanced: API server URL</summary>
         <label>Backend API base URL</label>
         <input id="apiBase" />
         <div class="muted" style="margin-top:6px">Defaults to your Render server. Change only if your API is hosted elsewhere.</div>
       </details>
+    </div>
+    <div class="login-card hidden" id="signupCard">
+      <h1>Create your company</h1>
+      <div class="muted">Start a free trial — no card required.</div>
+      <label>Company name</label>
+      <input id="s_company" placeholder="Acme Corporation" />
+      <label>Your work email</label>
+      <input id="s_email" type="email" placeholder="you@company.com" autocomplete="username" />
+      <label>Password</label>
+      <input id="s_password" type="password" placeholder="At least 8 characters" autocomplete="new-password" />
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
+        <div><label>Contact name</label><input id="s_contact" placeholder="Optional" /></div>
+        <div><label>Contact phone</label><input id="s_phone" placeholder="Optional" /></div>
+      </div>
+      <label>Company TIN</label>
+      <input id="s_tin" placeholder="Optional" />
+      <div style="height:16px"></div>
+      <button class="btn" id="signupBtn" onclick="doSignup()">Create account &amp; start trial</button>
+      <div id="signupMsg"></div>
+      <div class="switchrow">Already have an account? <a onclick="showSignin()">Sign in</a></div>
     </div>
   </div>
 </div>
@@ -168,6 +200,7 @@
       <h2 id="viewTitle">Dashboard</h2>
       <div class="who"><div class="meta"><div class="nm" id="whoName"></div><div class="rl" id="whoRole"></div></div><div class="avatar" id="avatar"></div></div>
     </div>
+    <div id="banner"></div>
     <div class="content" id="view"></div>
   </div>
 </div>
@@ -182,6 +215,9 @@ let API = localStorage.getItem('pp_api') || DEFAULT_API;
 let token = localStorage.getItem('pp_token') || null;
 let me = JSON.parse(localStorage.getItem('pp_me') || 'null');
 let departments = [];
+let company = null;
+let membership = null;
+let adminCompanies = {};
 
 const ROLE_LABEL = {HR_ADMIN:'HR Admin',FINANCE:'Finance',MANAGER:'Manager',EMPLOYEE:'Employee'};
 const $ = (id)=>document.getElementById(id);
@@ -197,7 +233,9 @@ function icon(name){const p={
   payroll:'<rect x="2.5" y="5.5" width="19" height="13" rx="2.4"/><path d="M2.5 10h19"/><circle cx="16.8" cy="14.2" r="1.6"/>',
   reports:'<path d="M3 20.5h18"/><rect x="5" y="11" width="3.4" height="7" rx="1"/><rect x="10.3" y="5" width="3.4" height="13" rx="1"/><rect x="15.6" y="8.5" width="3.4" height="9.5" rx="1"/>',
   audit:'<path d="M12 2.8l7.2 2.7v5.1c0 5-3.5 8.1-7.2 9.2-3.7-1.1-7.2-4.2-7.2-9.2V5.5z"/><path d="M8.8 11.8l2.2 2.2 4.2-4.4"/>',
-  payslip:'<path d="M6.2 2.8h7l4.8 4.8v12.8a1 1 0 0 1-1 1H6.2a1 1 0 0 1-1-1V3.8a1 1 0 0 1 1-1z"/><path d="M13 2.8v5h5"/><path d="M8.4 12.6h7"/><path d="M8.4 15.6h7"/>'
+  payslip:'<path d="M6.2 2.8h7l4.8 4.8v12.8a1 1 0 0 1-1 1H6.2a1 1 0 0 1-1-1V3.8a1 1 0 0 1 1-1z"/><path d="M13 2.8v5h5"/><path d="M8.4 12.6h7"/><path d="M8.4 15.6h7"/>',
+  settings:'<circle cx="12" cy="12" r="3.1"/><path d="M19.2 13.4a1.6 1.6 0 0 0 .32 1.77l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.6 1.6 0 0 0-2.72 1.13V21a2 2 0 1 1-4 0v-.06a1.6 1.6 0 0 0-2.72-1.13l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05a1.6 1.6 0 0 0-1.13-2.72H3a2 2 0 1 1 0-4h.06A1.6 1.6 0 0 0 4.2 7.8l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05A1.6 1.6 0 0 0 9.8 4.2V4a2 2 0 1 1 4 0v.06a1.6 1.6 0 0 0 2.72 1.13l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05a1.6 1.6 0 0 0 1.13 2.72H21a2 2 0 1 1 0 4h-.06a1.6 1.6 0 0 0-1.74 1.07z"/>',
+  building:'<rect x="4" y="3" width="11" height="18" rx="1.5"/><path d="M15 8.5h4A1.5 1.5 0 0 1 20.5 10V21"/><path d="M7.5 7h3M7.5 11h3M7.5 15h3"/>'
 };return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p[name]||''}</svg>`;}
 
 // ====== API helper ======
@@ -206,6 +244,7 @@ async function api(path, opts={}){
   if(token) headers['Authorization'] = 'Bearer '+token;
   const res = await fetch(API+path, Object.assign({}, opts, {headers}));
   if(res.status===401){ logout(); throw new Error('Session expired — please sign in again.'); }
+  if(res.status===402){ const d=await res.json().catch(()=>({})); showLocked(d); throw new Error(d.error||'Membership inactive'); }
   const ct = res.headers.get('content-type')||'';
   if(ct.includes('application/json')){
     const data = await res.json();
@@ -230,14 +269,31 @@ async function doLogin(){
     clearTimeout(slow);
     token=data.accessToken; me=data.user;
     localStorage.setItem('pp_token',token); localStorage.setItem('pp_me',JSON.stringify(me));
-    showApp();
+    await showApp();
   }catch(e){
     clearTimeout(slow);
     if(String(e.message).includes('2FA')){ $('totpWrap').classList.remove('hidden'); msg.innerHTML='<div class="info">Enter your two-factor code to continue.</div>'; }
     else msg.innerHTML='<div class="err">'+esc(e.message)+'</div>';
   }finally{ btn.disabled=false; btn.innerHTML='Sign in'; }
 }
-function logout(){ token=null; me=null; localStorage.removeItem('pp_token'); localStorage.removeItem('pp_me'); $('app').classList.add('hidden'); $('login').classList.remove('hidden'); }
+function logout(){ token=null; me=null; company=null; membership=null; localStorage.removeItem('pp_token'); localStorage.removeItem('pp_me'); $('app').classList.add('hidden'); $('login').classList.remove('hidden'); showSignin(); }
+function showSignup(){ $('signinCard').classList.add('hidden'); $('signupCard').classList.remove('hidden'); }
+function showSignin(){ $('signupCard') && $('signupCard').classList.add('hidden'); $('signinCard') && $('signinCard').classList.remove('hidden'); }
+async function doSignup(){
+  API=($('apiBase').value||DEFAULT_API).replace(/\/$/,''); localStorage.setItem('pp_api',API);
+  const body={company_name:$('s_company').value.trim(),admin_email:$('s_email').value.trim(),password:$('s_password').value,contact_name:$('s_contact').value.trim()||undefined,contact_phone:$('s_phone').value.trim()||undefined,tin:$('s_tin').value.trim()||undefined};
+  const msg=$('signupMsg'); const btn=$('signupBtn'); msg.innerHTML='';
+  if(!body.company_name||!body.admin_email||(body.password||'').length<8){ msg.innerHTML='<div class="err">Enter a company name, a valid email, and an 8+ character password.</div>'; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Creating…';
+  const slow=setTimeout(()=>{msg.innerHTML='<div class="info">Waking up the server… free hosting can take 30–50 seconds on the first request.</div>';},3500);
+  try{
+    const data=await api('/api/auth/signup',{method:'POST',body:JSON.stringify(body)});
+    clearTimeout(slow);
+    token=data.accessToken; me=data.user; localStorage.setItem('pp_token',token); localStorage.setItem('pp_me',JSON.stringify(me));
+    await showApp(); toast('Welcome! Your '+(data.trialDays||14)+'-day trial has started.');
+  }catch(e){ clearTimeout(slow); msg.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+  finally{ btn.disabled=false; btn.innerHTML='Create account & start trial'; }
+}
 
 // ====== Navigation ======
 const VIEWS = [
@@ -247,29 +303,66 @@ const VIEWS = [
   {id:'reports',label:'Reports',icon:'reports',roles:['HR_ADMIN','FINANCE']},
   {id:'audit',label:'Audit Log',icon:'audit',roles:['HR_ADMIN','FINANCE']},
   {id:'mypayslips',label:'My Payslips',icon:'payslip',roles:['EMPLOYEE','HR_ADMIN','FINANCE','MANAGER']},
+  {id:'settings',label:'Settings',icon:'settings',roles:['HR_ADMIN']},
+  {id:'admin',label:'Owner Console',icon:'building',roles:['SUPER_ADMIN']},
 ];
 let current='dashboard';
 function initials(email){const s=(email||'').split('@')[0].replace(/[^a-zA-Z]/g,'');return (s.slice(0,2)||'CC').toUpperCase();}
-function showApp(){
+async function showApp(){
   $('login').classList.add('hidden'); $('app').classList.remove('hidden');
-  $('brandLogo').innerHTML = crest(40)+'<div class="wordmark">CITADEL<br><span>COLLUSUM</span></div>';
-  $('sideBrand').innerHTML = crest(34)+'<div class="wm">CITADEL<small>COLLUSUM</small></div>';
   $('whoName').textContent=me.email; $('whoRole').textContent=ROLE_LABEL[me.role]||me.role;
   $('avatar').textContent=initials(me.email);
   $('apiLabel').textContent=API.replace('https://','');
+  $('banner').innerHTML='';
+  if(me.role==='SUPER_ADMIN'){
+    company=null; membership=null;
+    $('sideBrand').innerHTML = crest(34)+'<div class="wm">CITADEL<small>COLLUSUM</small></div>';
+    buildNav(); go('admin'); return;
+  }
+  try{ const r=await api('/api/company'); company=r.company; membership=r.membership; }catch(e){ return; }
+  applyBranding(company);
+  buildNav();
+  if(membership && !membership.active){ showLocked({error:membership.reason,membership:membership.status}); return; }
+  renderBanner();
+  go(me.role==='EMPLOYEE'?'mypayslips':'dashboard');
+}
+function buildNav(){
   const nav=$('nav'); nav.innerHTML='';
   VIEWS.filter(v=>v.roles.includes(me.role)).forEach(v=>{
     const b=document.createElement('button'); b.innerHTML='<span class="ic">'+icon(v.icon)+'</span><span>'+v.label+'</span>';
     b.onclick=()=>go(v.id); b.dataset.id=v.id; nav.appendChild(b);
   });
-  go(me.role==='EMPLOYEE'?'mypayslips':'dashboard');
+}
+function darken(hex,amt){const n=parseInt(hex.slice(1),16);let r=(n>>16)&255,g=(n>>8)&255,b=n&255;r=Math.round(r*(1-amt));g=Math.round(g*(1-amt));b=Math.round(b*(1-amt));return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');}
+function logoImg(logo,px){ if(logo&&/^data:image\//.test(logo)) return '<img src="'+logo+'" style="width:'+px+'px;height:'+px+'px;border-radius:9px;object-fit:contain;background:#fff"/>'; return null; }
+function applyBranding(c){
+  const root=document.documentElement.style;
+  const color=(c&&/^#[0-9a-fA-F]{6}$/.test(c.brand_color||''))?c.brand_color:'#27406e';
+  root.setProperty('--primary',color); root.setProperty('--primary-h',darken(color,0.16));
+  const name=((c&&c.name)||'Citadel Collusum').toUpperCase();
+  const mark=(c&&logoImg(c.logo,34))||crest(34);
+  $('sideBrand').innerHTML = mark+'<div class="wm">'+esc(name)+'<small>'+esc((c&&c.plan)||'')+'</small></div>';
+}
+function renderBanner(){
+  if(!membership) return;
+  if(membership.status==='TRIAL'){
+    const d=membership.daysLeft;
+    $('banner').innerHTML='<div class="banner"><div><b>Free trial</b> — '+(d!=null?(d+' day'+(d===1?'':'s')+' remaining. '):'')+'Contact your provider to activate full membership.</div></div>';
+  }
+}
+function showLocked(data){
+  $('login').classList.add('hidden'); $('app').classList.remove('hidden'); $('banner').innerHTML='';
+  $('viewTitle').textContent='Membership';
+  const msg=(data&&data.error)||'Your membership is inactive.';
+  const status=(data&&data.membership)||'INACTIVE';
+  $('view').innerHTML='<div class="lockcard"><div class="ic"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></div><h1 class="serif" style="margin:0 0 8px">Access paused</h1><div style="margin-bottom:10px">'+membershipChip(status)+'</div><p style="color:var(--sub);max-width:380px;margin:6px auto 22px">'+esc(msg)+'</p><button class="btn" style="max-width:220px;margin:0 auto" onclick="logout()">Back to sign in</button></div>';
 }
 function go(id){
   current=id;
   [...document.querySelectorAll('#nav button')].forEach(b=>b.classList.toggle('active',b.dataset.id===id));
   const v=VIEWS.find(x=>x.id===id); $('viewTitle').textContent=v?v.label:id;
   $('view').innerHTML='<div class="empty"><span class="spinner dark"></span> Loading…</div>';
-  ({dashboard:renderDashboard,employees:renderEmployees,payroll:renderPayroll,reports:renderReports,audit:renderAudit,mypayslips:renderMyPayslips}[id]||(()=>{}))();
+  ({dashboard:renderDashboard,employees:renderEmployees,payroll:renderPayroll,reports:renderReports,audit:renderAudit,mypayslips:renderMyPayslips,settings:renderSettings,admin:renderAdmin}[id]||(()=>{}))();
 }
 function errBox(e){ $('view').innerHTML='<div class="card"><div class="err">'+esc(e.message)+'</div></div>'; }
 function statusChip(s){const m={PREPARATION:'neutral',HR_REVIEW:'warn',FINANCE_APPROVAL:'warn',APPROVED:'brand',RELEASED:'ok',REJECTED:'bad'};return '<span class="chip '+(m[s]||'neutral')+'">'+s.replace(/_/g,' ')+'</span>';}
@@ -448,6 +541,121 @@ async function renderMyPayslips(){
   }catch(e){errBox(e);}
 }
 
+// ====== Settings (HR Admin) ======
+async function renderSettings(){
+  try{
+    const r=await api('/api/company'); company=r.company; membership=r.membership; const c=company||{}; const u=r.usage||{};
+    let sched=null; try{ sched=await api('/api/company/schedule'); }catch{}
+    sched=sched||{cadence:'SEMIMONTHLY',day_of_month:'',auto_email:true,enabled:false};
+    $('view').innerHTML=`
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+        <div class="card">
+          <div class="section-title">Company profile</div>
+          <label>Company name</label><input id="c_name" value="${esc(c.name||'')}"/>
+          <label>Address</label><input id="c_address" value="${esc(c.address||'')}"/>
+          <label>TIN</label><input id="c_tin" value="${esc(c.tin||'')}"/>
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
+            <div><label>Contact name</label><input id="c_contact" value="${esc(c.contact_name||'')}"/></div>
+            <div><label>Contact phone</label><input id="c_phone" value="${esc(c.contact_phone||'')}"/></div>
+          </div>
+          <label>Brand color</label>
+          <div class="row"><input id="c_color" type="color" value="${esc(c.brand_color||'#27406e')}" style="width:54px;height:40px;padding:3px"/><span class="muted">Applied across your dashboard and payslips.</span></div>
+          <div style="height:14px"></div>
+          <button class="btn sm" onclick="saveCompany()">Save profile</button>
+        </div>
+        <div class="card">
+          <div class="section-title">Logo</div>
+          <div class="uprow"><div id="logoPrev">${logoImg(c.logo,54)||'<div class=\"logoprev\">—</div>'}</div>
+            <div><input id="c_logo" type="file" accept="image/png,image/jpeg,image/svg+xml" style="border:none;padding:0"/><div class="muted" style="margin-top:6px">PNG, JPG, or SVG up to ~500KB. PNG/JPG also appear on payslip PDFs.</div></div></div>
+          <div style="height:18px"></div>
+          <div class="section-title">Plan &amp; usage</div>
+          <div class="kv"><span>Plan</span><span><span class="chip brand">${esc(c.plan||'—')}</span></span></div>
+          <div class="kv"><span>Membership</span><span>${membershipChip(membership?membership.status:'—')}</span></div>
+          <div class="kv"><span>Employees</span><span>${u.employees||0} / ${c.employee_limit||'—'}</span></div>
+          ${membership&&membership.daysLeft!=null?`<div class="kv"><span>Days left</span><span>${membership.daysLeft}</span></div>`:''}
+        </div>
+        <div class="card">
+          <div class="section-title">Payslip email template</div>
+          <div class="muted" style="margin-bottom:8px">Placeholders: {name}, {period}, {net}. Leave blank to use the default.</div>
+          <textarea id="c_tpl" placeholder="Hi {name}, please find attached your payslip for {period}. Net pay: {net}.">${esc(c.email_template||'')}</textarea>
+          <label>Sender name</label><input id="c_sender" value="${esc(c.sender_name||'')}"/>
+          <div style="height:14px"></div>
+          <button class="btn sm" onclick="saveEmailTpl()">Save template</button>
+        </div>
+        <div class="card">
+          <div class="section-title">Automatic payroll schedule</div>
+          <label class="toggle"><input type="checkbox" id="s_enabled" ${sched.enabled?'checked':''} style="width:auto"/> Enable scheduled runs</label>
+          <label>Cadence</label>
+          <select id="s_cadence">${['SEMIMONTHLY','MONTHLY','WEEKLY'].map(x=>`<option ${x===sched.cadence?'selected':''}>${x}</option>`).join('')}</select>
+          <label>Day of month (for monthly)</label><input id="s_dom" type="number" min="1" max="31" value="${esc(sched.day_of_month||'')}"/>
+          <label class="toggle"><input type="checkbox" id="s_autoemail" ${sched.auto_email?'checked':''} style="width:auto"/> Auto-email payslips after release</label>
+          <div style="height:14px"></div>
+          <button class="btn sm" onclick="saveSchedule()">Save schedule</button>
+          <div class="muted" style="margin-top:10px">Scheduled runs create a draft for approval. To fire automatically on free hosting, point a free cron service at <code>POST /api/payroll/auto</code>.</div>
+        </div>
+      </div>`;
+    $('c_logo').addEventListener('change',uploadLogo);
+  }catch(e){errBox(e);}
+}
+async function saveCompany(){
+  const body={name:$('c_name').value,address:$('c_address').value,tin:$('c_tin').value,contact_name:$('c_contact').value,contact_phone:$('c_phone').value,brand_color:$('c_color').value};
+  try{ await api('/api/company',{method:'PUT',body:JSON.stringify(body)}); const r=await api('/api/company'); company=r.company; applyBranding(company); toast('Profile saved'); }catch(e){toast(e.message);}
+}
+async function saveEmailTpl(){
+  try{ await api('/api/company',{method:'PUT',body:JSON.stringify({email_template:$('c_tpl').value,sender_name:$('c_sender').value})}); toast('Email template saved'); }catch(e){toast(e.message);}
+}
+async function saveSchedule(){
+  const body={enabled:$('s_enabled').checked,cadence:$('s_cadence').value,day_of_month:$('s_dom').value?Number($('s_dom').value):null,auto_email:$('s_autoemail').checked};
+  try{ await api('/api/company/schedule',{method:'PUT',body:JSON.stringify(body)}); toast('Schedule saved'); }catch(e){toast(e.message);}
+}
+function uploadLogo(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  if(file.size>500000){ toast('Image too large (max ~500KB)'); return; }
+  const reader=new FileReader();
+  reader.onload=async()=>{ try{ await api('/api/company/logo',{method:'POST',body:JSON.stringify({logo:reader.result})}); const r=await api('/api/company'); company=r.company; applyBranding(company); $('logoPrev').innerHTML=logoImg(company.logo,54)||''; toast('Logo updated'); }catch(e){toast(e.message);} };
+  reader.readAsDataURL(file);
+}
+
+// ====== Owner Console (Super Admin) ======
+function membershipChip(s){const m={ACTIVE:'ok',TRIAL:'gold',EXPIRED:'bad',SUSPENDED:'bad',NONE:'neutral'};return '<span class="chip '+(m[s]||'neutral')+'">'+esc(s||'—')+'</span>';}
+async function renderAdmin(){
+  try{
+    const [m,companies]=await Promise.all([api('/api/admin/metrics'),api('/api/admin/companies')]);
+    adminCompanies={}; companies.forEach(c=>adminCompanies[c.id]=c);
+    const rows=companies.map(c=>`<tr>
+      <td><b>${esc(c.name)}</b><br><span class="muted">${esc(c.contact_name||'')}${c.contact_phone?' · '+esc(c.contact_phone):''}</span></td>
+      <td><span class="chip brand">${esc(c.plan||'—')}</span></td>
+      <td>${membershipChip(c.membership_status)}</td>
+      <td>${c.employee_count}/${c.employee_limit}</td>
+      <td class="muted">${c.membership_expires_at?new Date(c.membership_expires_at).toLocaleDateString():'—'}</td>
+      <td><div class="row"><button class="btn sm" onclick="activateModal('${c.id}')">Activate</button><button class="btn ghost sm" onclick="trialCompany('${c.id}')">Trial</button><button class="btn danger sm" onclick="suspendCompany('${c.id}')">Suspend</button></div></td>
+    </tr>`).join('');
+    $('view').innerHTML=`
+      <div class="grid stats">
+        <div class="card stat"><div class="ic">${icon('building')}</div><div class="n">${m.companies}</div><div class="l">Client companies</div></div>
+        <div class="card stat"><div class="ic">${icon('audit')}</div><div class="n">${m.active}</div><div class="l">Active memberships</div></div>
+        <div class="card stat"><div class="ic">${icon('employees')}</div><div class="n">${m.employees}</div><div class="l">Total employees</div></div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Company</th><th>Plan</th><th>Status</th><th>Employees</th><th>Expires</th><th>Actions</th></tr></thead><tbody>${rows||'<tr><td colspan=6 class=empty>No companies yet</td></tr>'}</tbody></table></div>`;
+  }catch(e){errBox(e);}
+}
+function activateModal(id){
+  const c=adminCompanies[id]||{}; 
+  openModal('Activate · '+esc(c.name||''),`
+    <label>Billing period (months)</label><input id="a_months" type="number" min="1" value="1"/>
+    <label>Plan</label><select id="a_plan">${['STARTER','BUSINESS','ENTERPRISE'].map(p=>`<option ${p===c.plan?'selected':''}>${p}</option>`).join('')}</select>
+    <label>Employee limit</label><input id="a_limit" type="number" min="1" value="${esc(c.employee_limit||50)}"/>
+    <div class="muted" style="margin-top:8px">Use this after the client has paid you. Extends from the current expiry if still active.</div>`,
+    `<button class="btn" onclick="doActivate('${id}')">Activate membership</button>`);
+}
+async function doActivate(id){
+  const body={months:Number($('a_months').value||1),plan:$('a_plan').value,employee_limit:Number($('a_limit').value||50)};
+  try{ await api('/api/admin/companies/'+id+'/activate',{method:'POST',body:JSON.stringify(body)}); closeModal(); toast('Membership activated'); renderAdmin(); }catch(e){toast(e.message);}
+}
+async function suspendCompany(id){ if(!confirm("Suspend this company's access?"))return; try{ await api('/api/admin/companies/'+id+'/suspend',{method:'POST'}); toast('Suspended'); renderAdmin(); }catch(e){toast(e.message);} }
+async function trialCompany(id){ const d=prompt('Trial length in days?','14'); if(!d)return; try{ await api('/api/admin/companies/'+id+'/trial',{method:'POST',body:JSON.stringify({days:Number(d)})}); toast('Trial set'); renderAdmin(); }catch(e){toast(e.message);} }
+
 // ====== Modal ======
 function openModal(title,bodyHtml,footerHtml){
   $('modalRoot').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal"><header><h3>${esc(title)}</h3><button class="x" onclick="closeModal()">×</button></header><div class="body">${bodyHtml}${footerHtml?'<div style="margin-top:18px">'+footerHtml+'</div>':''}</div></div></div>`;
@@ -456,6 +664,7 @@ function closeModal(){ $('modalRoot').innerHTML=''; }
 
 // ====== Boot ======
 $('apiBase').value = API;
+$('brandLogo').innerHTML = crest(40)+'<div class="wordmark">CITADEL<br><span>COLLUSUM</span></div>';
 if(token && me){ showApp(); }
 $('password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 $('totp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
