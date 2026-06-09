@@ -598,7 +598,7 @@ async function renderSettings(){
           <label>Password ${mail.hasPassword?'<span class="muted">(leave blank to keep current)</span>':''}</label><input id="m_pass" type="password" placeholder="${mail.hasPassword?'saved':'Mailbox password'}"/>
           <label>From address</label><input id="m_from" value="${esc(mail.from||'')}" placeholder="Payroll <payroll@yourcompany.com>"/>
           <div style="height:14px"></div>
-          <div class="row"><button class="btn sm" onclick="saveEmailSmtp()">Save email settings</button><button class="btn ghost sm" onclick="testEmailSmtp()">Send test email</button></div>
+          <div class="row"><button class="btn sm" onclick="saveEmailSmtp()">Save email settings</button><button class="btn ghost sm" onclick="testEmailSmtp()">Send test email</button>${mail.configured?'<button class="btn ghost sm" onclick="clearEmailSmtp()">Use platform default</button>':''}</div>
           <div class="muted" style="margin-top:10px">Find these under your email provider's connect-a-device or IMAP/SMTP settings.</div>
         </div>
         <div class="card">
@@ -634,6 +634,10 @@ async function saveEmailSmtp(){
   const pw=$('m_pass').value; if(pw) body.password=pw;
   if(!body.host||!body.user){ toast('Enter at least SMTP host and username'); return; }
   try{ await api('/api/company/email',{method:'PUT',body:JSON.stringify(body)}); toast('Email settings saved'); }catch(e){ toast(e.message); }
+}
+async function clearEmailSmtp(){
+  if(!confirm('Stop using this mailbox and send through the platform default instead?')) return;
+  try{ await api('/api/company/email',{method:'PUT',body:JSON.stringify({disable:true})}); toast('Reverted to platform default'); renderSettings(); }catch(e){ toast(e.message); }
 }
 async function testEmailSmtp(){
   const to=prompt('Send a test email to which address?', (me&&me.email)||'');
