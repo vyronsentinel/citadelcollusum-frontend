@@ -235,7 +235,8 @@ function icon(name){const p={
   audit:'<path d="M12 2.8l7.2 2.7v5.1c0 5-3.5 8.1-7.2 9.2-3.7-1.1-7.2-4.2-7.2-9.2V5.5z"/><path d="M8.8 11.8l2.2 2.2 4.2-4.4"/>',
   payslip:'<path d="M6.2 2.8h7l4.8 4.8v12.8a1 1 0 0 1-1 1H6.2a1 1 0 0 1-1-1V3.8a1 1 0 0 1 1-1z"/><path d="M13 2.8v5h5"/><path d="M8.4 12.6h7"/><path d="M8.4 15.6h7"/>',
   settings:'<circle cx="12" cy="12" r="3.1"/><path d="M19.2 13.4a1.6 1.6 0 0 0 .32 1.77l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.6 1.6 0 0 0-2.72 1.13V21a2 2 0 1 1-4 0v-.06a1.6 1.6 0 0 0-2.72-1.13l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05a1.6 1.6 0 0 0-1.13-2.72H3a2 2 0 1 1 0-4h.06A1.6 1.6 0 0 0 4.2 7.8l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05A1.6 1.6 0 0 0 9.8 4.2V4a2 2 0 1 1 4 0v.06a1.6 1.6 0 0 0 2.72 1.13l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05a1.6 1.6 0 0 0 1.13 2.72H21a2 2 0 1 1 0 4h-.06a1.6 1.6 0 0 0-1.74 1.07z"/>',
-  building:'<rect x="4" y="3" width="11" height="18" rx="1.5"/><path d="M15 8.5h4A1.5 1.5 0 0 1 20.5 10V21"/><path d="M7.5 7h3M7.5 11h3M7.5 15h3"/>'
+  building:'<rect x="4" y="3" width="11" height="18" rx="1.5"/><path d="M15 8.5h4A1.5 1.5 0 0 1 20.5 10V21"/><path d="M7.5 7h3M7.5 11h3M7.5 15h3"/>',
+  team:'<circle cx="7" cy="8" r="2.6"/><path d="M2.6 18.5a4.5 4.5 0 0 1 8.8 0"/><circle cx="16" cy="7.2" r="2.3"/><path d="M14.6 12.2A4.2 4.2 0 0 1 21 15.8"/>'
 };return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p[name]||''}</svg>`;}
 
 // ====== API helper ======
@@ -303,6 +304,7 @@ const VIEWS = [
   {id:'reports',label:'Reports',icon:'reports',roles:['HR_ADMIN','FINANCE']},
   {id:'audit',label:'Audit Log',icon:'audit',roles:['HR_ADMIN','FINANCE']},
   {id:'mypayslips',label:'My Payslips',icon:'payslip',roles:['EMPLOYEE','HR_ADMIN','FINANCE','MANAGER']},
+  {id:'team',label:'Team',icon:'team',roles:['HR_ADMIN']},
   {id:'settings',label:'Settings',icon:'settings',roles:['HR_ADMIN']},
   {id:'admin',label:'Owner Console',icon:'building',roles:['SUPER_ADMIN']},
 ];
@@ -362,7 +364,7 @@ function go(id){
   [...document.querySelectorAll('#nav button')].forEach(b=>b.classList.toggle('active',b.dataset.id===id));
   const v=VIEWS.find(x=>x.id===id); $('viewTitle').textContent=v?v.label:id;
   $('view').innerHTML='<div class="empty"><span class="spinner dark"></span> Loading…</div>';
-  ({dashboard:renderDashboard,employees:renderEmployees,payroll:renderPayroll,reports:renderReports,audit:renderAudit,mypayslips:renderMyPayslips,settings:renderSettings,admin:renderAdmin}[id]||(()=>{}))();
+  ({dashboard:renderDashboard,employees:renderEmployees,payroll:renderPayroll,reports:renderReports,audit:renderAudit,mypayslips:renderMyPayslips,team:renderTeam,settings:renderSettings,admin:renderAdmin}[id]||(()=>{}))();
 }
 function errBox(e){ $('view').innerHTML='<div class="card"><div class="err">'+esc(e.message)+'</div></div>'; }
 function statusChip(s){const m={PREPARATION:'neutral',HR_REVIEW:'warn',FINANCE_APPROVAL:'warn',APPROVED:'brand',RELEASED:'ok',REJECTED:'bad'};return '<span class="chip '+(m[s]||'neutral')+'">'+s.replace(/_/g,' ')+'</span>';}
@@ -614,6 +616,62 @@ function uploadLogo(ev){
   const reader=new FileReader();
   reader.onload=async()=>{ try{ await api('/api/company/logo',{method:'POST',body:JSON.stringify({logo:reader.result})}); const r=await api('/api/company'); company=r.company; applyBranding(company); $('logoPrev').innerHTML=logoImg(company.logo,54)||''; toast('Logo updated'); }catch(e){toast(e.message);} };
   reader.readAsDataURL(file);
+}
+
+// ====== Team / Logins (HR Admin) ======
+const TEAM_ROLES=['HR_ADMIN','FINANCE','MANAGER','EMPLOYEE'];
+const ROLE_DESC={HR_ADMIN:'Full access — manage employees, build & submit payroll, branding and settings.',FINANCE:'Reviews and releases payroll (the final approval step).',MANAGER:'Views payroll, employees, and reports — cannot approve.',EMPLOYEE:'Self-service only — can sign in to view their own payslips.'};
+function roleLabel(r){return (typeof ROLE_LABEL!=='undefined'&&ROLE_LABEL[r])||r;}
+function roleChip(r){const m={HR_ADMIN:'brand',FINANCE:'gold',MANAGER:'neutral',EMPLOYEE:'neutral'};return '<span class="chip '+(m[r]||'neutral')+'">'+esc(roleLabel(r))+'</span>';}
+function roleSelect(id,sel){return '<select id="'+id+'">'+TEAM_ROLES.map(r=>'<option value="'+r+'" '+(r===sel?'selected':'')+'>'+esc(roleLabel(r))+'</option>').join('')+'</select>';}
+async function renderTeam(){
+  try{
+    const users=await api('/api/team'); window._team=users;
+    const hasFinance=users.some(u=>u.role==='FINANCE'&&u.is_active);
+    const rows=users.map(u=>`<tr>
+      <td><b>${esc(u.email)}</b>${u.id===me.id?' <span class="muted">(you)</span>':''}</td>
+      <td>${roleChip(u.role)}</td>
+      <td>${u.is_active?'<span class="chip ok">Active</span>':'<span class="chip bad">Disabled</span>'}</td>
+      <td class="muted">${u.created_at?new Date(u.created_at).toLocaleDateString():'—'}</td>
+      <td><div class="row"><button class="btn ghost sm" onclick="editUserModal('${u.id}')">Edit</button>${u.id===me.id?'':(u.is_active?`<button class="btn danger sm" onclick="toggleUser('${u.id}',false)">Disable</button>`:`<button class="btn sm" onclick="toggleUser('${u.id}',true)">Enable</button>`)}</div></td>
+    </tr>`).join('');
+    $('view').innerHTML=`
+      ${hasFinance?'':'<div class="banner" style="margin-bottom:14px"><div><b>Add a Finance login to release payroll.</b> A payroll run needs a Finance user for the final approval before payslips can be emailed.</div></div>'}
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="muted">Logins that can sign in to this company. These are separate from employee records.</div>
+        <button class="btn sm" onclick="newUserModal()">+ Add login</button>
+      </div>
+      <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Added</th><th>Actions</th></tr></thead><tbody>${rows||'<tr><td colspan=5 class=empty>No logins yet</td></tr>'}</tbody></table></div>`;
+  }catch(e){errBox(e);}
+}
+function newUserModal(){
+  openModal('Add login',`
+    <label>Work email</label><input id="nu_email" type="email" placeholder="finance@yourcompany.com"/>
+    <label>Temporary password</label><input id="nu_pw" type="text" placeholder="At least 8 characters"/>
+    <label>Role</label>${roleSelect('nu_role','FINANCE')}
+    <div class="muted" id="nu_desc" style="margin-top:8px">${esc(ROLE_DESC.FINANCE)}</div>`,
+    `<button class="btn" onclick="createUser()">Create login</button>`);
+  const sel=$('nu_role'); if(sel) sel.onchange=()=>{ const d=$('nu_desc'); if(d) d.textContent=ROLE_DESC[sel.value]||''; };
+}
+async function createUser(){
+  const body={email:($('nu_email').value||'').trim(),password:$('nu_pw').value||'',role:$('nu_role').value};
+  if(!body.email||body.password.length<8){ toast('Enter an email and a password of at least 8 characters'); return; }
+  try{ await api('/api/team',{method:'POST',body:JSON.stringify(body)}); closeModal(); toast('Login created'); renderTeam(); }catch(e){ toast(e.message); }
+}
+function editUserModal(id){
+  const u=(window._team||[]).find(x=>x.id===id)||{};
+  openModal('Edit login · '+esc(u.email||''),`
+    <label>Role</label>${roleSelect('eu_role',u.role)}
+    <label>Reset password (optional)</label><input id="eu_pw" type="text" placeholder="Leave blank to keep current"/>
+    <div class="muted" style="margin-top:8px">${u.id===me.id?'You cannot change your own role here.':''}</div>`,
+    `<button class="btn" onclick="saveUser('${id}')">Save changes</button>`);
+}
+async function saveUser(id){
+  const body={role:$('eu_role').value}; const pw=$('eu_pw').value; if(pw) body.password=pw;
+  try{ await api('/api/team/'+id,{method:'PUT',body:JSON.stringify(body)}); closeModal(); toast('Login updated'); renderTeam(); }catch(e){ toast(e.message); }
+}
+async function toggleUser(id,active){
+  try{ await api('/api/team/'+id,{method:'PUT',body:JSON.stringify({is_active:active})}); toast(active?'Login enabled':'Login disabled'); renderTeam(); }catch(e){ toast(e.message); }
 }
 
 // ====== Owner Console (Super Admin) ======
